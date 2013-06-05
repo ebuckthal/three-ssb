@@ -1,0 +1,180 @@
+<!DOCTYPE HTML>
+<html>
+   <head>
+
+      <script type="text/javascript" src="js/glMatrix-0.9.5.min.js"></script>
+      <script type="text/javascript" src="js/webgl-utils.js"></script>
+      <script type="text/javascript" src="js/buffers.js"></script>
+      <script type="text/javascript" src="js/ssb.js"></script>
+
+      <script id="shader-fs" type="x-shader/x-fragment">
+         precision mediump float;
+
+         varying vec3 vNormal;
+         varying vec4 vPosition;
+
+         uniform vec3 uAmbientColor;
+         uniform vec3 uDiffuseColor;
+         uniform vec3 uLightPosition;
+
+         void main(void) {
+
+            vec3 normal = normalize(vNormal);
+            vec3 light = normalize(uLightPosition-vPosition.xyz);
+            float diffuse = clamp(dot(normal, light), 0.0, 1.0);
+
+            //gl_FragColor = vec4(uAmbientColor + uDiffuse, 1.0);
+            //gl_FragColor = vec4(1.0, 1.0, 0, 1.0);
+            //gl_FragColor = vec4d, 1.0);
+            gl_FragColor = vec4(uAmbientColor + uDiffuseColor*diffuse, 1.0);
+         }
+      </script>
+
+      <script id="shader-vs" type="x-shader/x-vertex">
+         attribute vec3 aVertexPosition;
+         attribute vec3 aVertexNormal;
+
+         uniform mat4 uMVMatrix;
+         uniform mat4 uPMatrix;
+         uniform mat3 uNMatrix;
+
+         varying vec3 vNormal;
+         varying vec4 vPosition;
+
+         void main(void) {
+
+            vPosition = uMVMatrix * vec4(aVertexPosition, 1.0);
+            gl_Position = uPMatrix * vPosition;
+            vNormal = normalize(uNMatrix * aVertexNormal);
+
+         }
+      </script>
+
+      <script type="text/javascript">
+
+         var gl;
+
+         function initGL( canvas ) {
+
+            try {
+
+               gl = canvas.getContext("experimental-webgl");
+               gl.viewportWidth = canvas.width;
+               gl.viewportHeight = canvas.height;
+            } catch ( e ) {
+
+
+               if ( !gl ) {
+
+                  alert("not initialized...");
+               }
+            }
+         }
+
+function getShader( gl, id ) {
+   var shaderScript = document.getElementById( id );
+
+   if ( !shaderScript ) {
+      return null;
+   }
+
+   var str = "";
+
+   var k = shaderScript.firstChild;
+
+   while ( k ) {
+
+      if ( k.nodeType == 3 ) {
+
+         str += k.textContent;
+      }
+      k = k.nextSibling;
+   }
+
+   var shader;
+
+   if ( shaderScript.type == "x-shader/x-fragment" ) {
+      shader = gl.createShader( gl.FRAGMENT_SHADER );
+   } else if ( shaderScript.type == "x-shader/x-vertex" ) {
+      shader = gl.createShader( gl.VERTEX_SHADER );
+   } else {
+      return null;
+   }
+
+   gl.shaderSource( shader, str );
+   gl.compileShader( shader );
+
+   if ( !gl.getShaderParameter( shader, gl.COMPILE_STATUS )) {
+      alert( gl.getShaderInfoLog( shader ));
+      return null;
+   }
+
+   return shader;
+}
+
+function initShaders() {
+
+   var vertexShader = getShader( gl, "shader-vs" );
+   var fragmentShader = getShader( gl, "shader-fs" );
+
+   shaderProgram = gl.createProgram();
+   gl.attachShader( shaderProgram, vertexShader );
+   gl.attachShader( shaderProgram, fragmentShader );
+   gl.linkProgram( shaderProgram );
+
+   if ( !gl.getProgramParameter( shaderProgram, gl.LINK_STATUS )) {
+      alert(gl.getShaderInfoLog(fragmentShader));
+      alert(gl.getShaderInfoLog(vertexShader));
+      alert( "shaders not initialized" );
+   }
+
+   gl.useProgram( shaderProgram );
+
+   shaderProgram.vertexPositionAttribute = gl.getAttribLocation( shaderProgram, "aVertexPosition" );
+   gl.enableVertexAttribArray( shaderProgram.vertexPositionAttribute );
+
+   shaderProgram.vertexNormalAttribute = gl.getAttribLocation( shaderProgram, "aVertexNormal" );
+   gl.enableVertexAttribArray( shaderProgram.vertexNormalAttribute );
+
+   //shaderProgram.vertexPositionAttribute = gl.getAttribLocation( shaderProgram, "aTextureCoord" );
+   //gl.enableVertexAttribArray( shaderProgram.vertexPositionAttribute );
+
+   shaderProgram.pMatrixUniform = gl.getUniformLocation( shaderProgram, "uPMatrix" );
+   shaderProgram.mvMatrixUniform = gl.getUniformLocation( shaderProgram, "uMVMatrix" );
+   shaderProgram.nMatrixUniform = gl.getUniformLocation( shaderProgram, "uNMatrix" );
+
+   //shaderProgram.samplerUniform = gl.getUniformLocation( shaderProgram, "uSampler" );
+
+   shaderProgram.ambientUniform = gl.getUniformLocation( shaderProgram, "ughting in modelviewAmbientColor" );
+   shaderProgram.diffuseUniform = gl.getUniformLocation( shaderProgram, "uDiffuseColor" );
+   shaderProgram.lightPositionUniform = gl.getUniformLocation( shaderProgram, "uLightPosition" );
+}
+
+
+
+
+function webGLStart() {
+   var canvas = document.getElementById("ssb");
+   initGL(canvas);
+   initShaders();
+   initBuffers();
+   initPlayers();
+   initPlatforms();
+
+   gl.clearColor(0.0, 0.0, 0.0, 1.0);
+   gl.enable(gl.DEPTH_TEST);
+
+   document.onkeydown = handleKeyDown;
+   document.onkeyup = handleKeyUp;
+
+   tick();
+}
+
+
+</script>
+
+      </head>
+      <body onload="webGLStart()">
+         <canvas id="ssb" style="border: none;" width="600" height="600"></canvas>
+      </body>
+   </html>
