@@ -209,9 +209,6 @@ function Player(id, color, x, y) {
    this.rtimer = 0;
    this.ktimer = 0;
 
-   this.moveLeft = false;
-   this.moveRight = false;
-
    this.dirAttack = dir_enum.NONE; 
 
    function draw() {
@@ -291,6 +288,7 @@ function Player(id, color, x, y) {
             break;
          case state_enum.INAIR:
             this.vmod[0] = -0.3;
+            this.velocity[0] = 0;
             break;
          case state_enum.KNOCKBACK:
             break;
@@ -315,6 +313,7 @@ function Player(id, color, x, y) {
             break;
          case state_enum.INAIR:
             this.vmod[0] = 0.3;
+            this.velocity[0] = 0;
             break;
          case state_enum.KNOCKBACK:
             break;
@@ -412,12 +411,14 @@ function Player(id, color, x, y) {
 
             //gravity
             this.velocity[1] += (-0.001*elapsed);
-
+            this.velocity[0] /= 1.01;
+            
             var k = this.checkForDeath();
             if(k[0] > -1) {
                console.log("death");
                this.state = state_enum.INAIR;
                this.position = [0, 30];
+               this.velocity = [0, 0];
                break;
             }
 
@@ -451,23 +452,37 @@ function Player(id, color, x, y) {
             //gravity
             this.velocity[1] += (-0.001*elapsed);
             
+            if(this.rtimer > 0) {
+               this.rtimer -= elapsed;
+            } else {
+               this.state = state_enum.INAIR;
+               break;
+            }
+            
             var k = this.checkForDeath();
             if(k[0] > -1) {
                console.log("death");
                this.state = state_enum.INAIR;
-               this.position = [0, 20];
+               this.position = [0, 30];
+               this.velocity = [0, 0];
                break;
             }
 
             var i = this.checkForPlatforms();
 
             if(i > -1) {
-               this.state = state_enum.RECOVERY;
-               this.jumps = 2;
-               this.position[1] = platforms[i].y;
-               this.velocity[1] = 0;
-               this.velocity[0] = 0;
-               this.vmod[0,0];
+               if(Math.abs(this.velocity[0]) + Math.abs(this.velocity[1]) > 0.5) { //bounce!
+                  this.velocity[1] = -this.velocity[1];
+                  this.velocity[0] /= 2;
+                  this.vmod[0,0];
+               } else { //stand
+                  this.state = state_enum.RECOVERY;
+                  this.jumps = 2;
+                  this.position[1] = platforms[i].y;
+                  this.velocity[1] = 0;
+                  this.velocity[0] = 0;
+                  this.vmod[0,0];
+               }
             }
 
             this.position[1] += this.velocity[1] + this.vmod[1];
@@ -477,7 +492,7 @@ function Player(id, color, x, y) {
             this.adtimer = 0;
             break;
          case state_enum.RECOVERY:
-            if(this.rtimer> 0) {
+            if(this.rtimer > 0) {
                this.rtimer -= elapsed;
             } else {
                this.state = state_enum.INAIR;
@@ -491,7 +506,7 @@ function Player(id, color, x, y) {
    this.tick = tick;
 
    function checkForDeath() {
-      if(this.position[1] < -30) {
+      if(this.position[1] < -30 || this.position[1] > 50 || this.position[0] < -50 || this.position[0] > 100) {
          return [1, 0];
       }
       return [-1, 0];
