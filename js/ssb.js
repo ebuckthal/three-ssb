@@ -150,8 +150,10 @@ function Platform(left, right, y, height, depth) {
    function draw() {
       var x = (this.right + this.left) / 2;
       var width = (this.right - this.left);
+      
 
       mvPushMatrix();
+      gl.uniform3f( shaderProgram.diffuseUniform, 0.5, 0.5, 0.5);
       mat4.translate(mvMatrix, [x, y - (this.height/2), 0]);
       mat4.scale(mvMatrix, [width, this.height, this.depth]); 
       drawCube();
@@ -180,10 +182,10 @@ function testPlayer(p) {
 }
 
 state_enum = {
-STANDING : { code : "S", color : [ },
-           INAIR : { code : "A" },
-           KNOCKBACK : { code : "K" },
-           RECOVERY: { code : "R" }
+STANDING : { code : "S", dcolor : [1.0, 1.0, 0.0] },
+           INAIR : { code : "A", dcolor: [0.0, 0.0, 1.0] },
+           KNOCKBACK : { code : "K", dcolor : [1.0, 0.0, 0.0] },
+           RECOVERY: { code : "R", dcolor : [0.0, 1.0, 0.0] }
 }
 
 dir_enum = { NONE : -1, UP : 0, RIGHT : 1, DOWN : 2, LEFT: 3 }
@@ -411,6 +413,14 @@ function Player(id, color, x, y) {
             //gravity
             this.velocity[1] += (-0.001*elapsed);
 
+            var k = this.checkForDeath();
+            if(k[0] > -1) {
+               console.log("death");
+               this.state = state_enum.INAIR;
+               this.position = [0, 30];
+               break;
+            }
+
             var j = this.checkForHit(); //j[0] = player number, j[1] = direction of knockback
             if(j[0] > -1) {
                console.log("hit by: " + j[0]);
@@ -440,6 +450,14 @@ function Player(id, color, x, y) {
 
             //gravity
             this.velocity[1] += (-0.001*elapsed);
+            
+            var k = this.checkForDeath();
+            if(k[0] > -1) {
+               console.log("death");
+               this.state = state_enum.INAIR;
+               this.position = [0, 20];
+               break;
+            }
 
             var i = this.checkForPlatforms();
 
@@ -471,6 +489,14 @@ function Player(id, color, x, y) {
       }
    }
    this.tick = tick;
+
+   function checkForDeath() {
+      if(this.position[1] < -30) {
+         return [1, 0];
+      }
+      return [-1, 0];
+   }
+   this.checkForDeath = checkForDeath;
 
    function checkForHit() {
 
