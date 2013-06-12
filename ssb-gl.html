@@ -10,22 +10,19 @@
       <script id="shader-fs" type="x-shader/x-fragment">
          precision mediump float;
 
-         varying vec3 vNormal;
-         varying vec4 vPosition;
-
          uniform vec3 uAmbientColor;
          uniform vec3 uDiffuseColor;
-         uniform vec3 uLightPosition;
+
+         varying vec3 vNormal;
+         varying vec4 vPosition;
+         varying vec4 vLight;
 
          void main(void) {
 
             vec3 normal = normalize(vNormal);
-            vec3 light = normalize(uLightPosition-vPosition.xyz);
+            vec3 light = normalize(vLight.xyz - vPosition.xyz);
             float diffuse = clamp(dot(normal, light), 0.0, 1.0);
 
-            //gl_FragColor = vec4(uAmbientColor + uDiffuse, 1.0);
-            //gl_FragColor = vec4(1.0, 1.0, 0, 1.0);
-            //gl_FragColor = vec4d, 1.0);
             gl_FragColor = vec4(uAmbientColor + uDiffuseColor*diffuse, 1.0);
          }
       </script>
@@ -38,12 +35,16 @@
          uniform mat4 uPMatrix;
          uniform mat3 uNMatrix;
 
+         uniform vec3 uLightPosition;
+         
          varying vec3 vNormal;
          varying vec4 vPosition;
+         varying vec4 vLight;
 
          void main(void) {
 
             vPosition = uMVMatrix * vec4(aVertexPosition, 1.0);
+            vLight = uMVMatrix * vec4(uLightPosition, 1.0);
             gl_Position = uPMatrix * vPosition;
             vNormal = normalize(uNMatrix * aVertexNormal);
 
@@ -123,8 +124,8 @@ function initShaders() {
    gl.linkProgram( shaderProgram );
 
    if ( !gl.getProgramParameter( shaderProgram, gl.LINK_STATUS )) {
-      alert(gl.getShaderInfoLog(fragmentShader));
-      alert(gl.getShaderInfoLog(vertexShader));
+      alert("frag shader log: " + gl.getShaderInfoLog(fragmentShader));
+      alert("vert shader log: " + gl.getShaderInfoLog(vertexShader));
       alert( "shaders not initialized" );
    }
 
@@ -145,7 +146,7 @@ function initShaders() {
 
    //shaderProgram.samplerUniform = gl.getUniformLocation( shaderProgram, "uSampler" );
 
-   shaderProgram.ambientUniform = gl.getUniformLocation( shaderProgram, "ughting in modelviewAmbientColor" );
+   shaderProgram.ambientUniform = gl.getUniformLocation( shaderProgram, "uAmbientColor" );
    shaderProgram.diffuseUniform = gl.getUniformLocation( shaderProgram, "uDiffuseColor" );
    shaderProgram.lightPositionUniform = gl.getUniformLocation( shaderProgram, "uLightPosition" );
 }
