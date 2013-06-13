@@ -27,18 +27,13 @@ function drawScore() {
    
    ctx.clearRect(0,0, c.width, c.height);
    
-   ctx.fillStyle = "#FF0000";
-   ctx.fillText("damage: " + players[0].knockback, 90, 580);
-   ctx.fillText("score: " + score[1], 90, 600);
+   ctx.fillStyle = "#b58900";
+   ctx.fillText("damage: " + players[0].knockback, 90, 730);
+   ctx.fillText("score: " + score[1], 90, 650);
    
-   ctx.fillStyle = "#FF0000";
-   ctx.fillText("damage: " + players[1].knockback, 90, 90);
-   ctx.fillText("score: " + score[0], 90, 110);
-}
-
-
-function drawReset() {
-
+   ctx.fillStyle = "#6c71c4";
+   ctx.fillText("damage: " + players[1].knockback, 560, 730);
+   ctx.fillText("score: " + score[0], 560, 650);
 }
 
 function drawCube() {
@@ -270,18 +265,18 @@ function Player(id, color, x, y) {
             default:
                break;
          }
-      } else if (this.deathtimer > 0) {
-         this.drawPlayerDeath(this.deathPos);
-      } else {
       }
-
       drawCube();
       mvPopMatrix();
    }
    this.draw = draw;
 
-   function drawPlayerDeath(pos, deathtimer) {
-
+   function drawPlayerDeath() {
+      mvPushMatrix();
+      mat4.translate(mvMatrix, [this.deathPos[0], this.deathPos[1], 0]);
+      mat4.scale(mvMatrix, [50, 50, 50]);
+      drawCube();
+      mvPopMatrix();
    }
    this.drawPlayerDeath = drawPlayerDeath;
 
@@ -421,6 +416,9 @@ function Player(id, color, x, y) {
       if(this.rtimer > 0) {
          this.rtimer -= elapsed;
       }
+      if(this.deathtimer > 0) {
+         this.deathtimer -= elapsed;
+      }
 
       switch(this.state) {
          case state_enum.STANDING:
@@ -431,9 +429,9 @@ function Player(id, color, x, y) {
                console.log("hit by: " + j[0]);
                console.log(j[1]);
                this.state = state_enum.KNOCKBACK;
-               this.velocity[0] = (j[1][0]) * 1.2 * this.knockback;
-               this.velocity[1] = (j[1][1]) * 1.2 * this.knockback;
-               this.rtimer = 400 * 1.2 * this.knockback;
+               this.velocity[0] = (j[1][0]) * 1.1 * this.knockback;
+               this.velocity[1] = (j[1][1]) * 1.1 * this.knockback;
+               this.rtimer = 400 * 1.1 * this.knockback;
                this.knockback += 1;
                
                drawScore();
@@ -451,6 +449,7 @@ function Player(id, color, x, y) {
             this.velocity[0] /= 1.01;
 
             var k = this.checkForDeath();
+            var deathPos = k[1];
             if(k[0] > -1) {
                console.log("death");
                this.knockback = 1;
@@ -469,9 +468,9 @@ function Player(id, color, x, y) {
                console.log("hit by: " + j[0]);
                console.log(j[1]);
                this.state = state_enum.KNOCKBACK;
-               this.velocity[0] = (j[1][0]) * 1.2 * this.knockback;
-               this.velocity[1] = (j[1][1]) * 1.2 * this.knockback;
-               this.rtimer = 400 * 1.2 * this.knockback;
+               this.velocity[0] = (j[1][0]) * 1.1 * this.knockback;
+               this.velocity[1] = (j[1][1]) * 1.1 * this.knockback;
+               this.rtimer = 400 * 1.1 * this.knockback;
                this.knockback += 1;
                
                drawScore();
@@ -505,6 +504,7 @@ function Player(id, color, x, y) {
             }
 
             var k = this.checkForDeath();
+            this.deathPos = k[1];
             if(k[0] > -1) {
                console.log("death");
                this.knockback = 1;
@@ -557,7 +557,7 @@ function Player(id, color, x, y) {
 
    function checkForDeath() {
       if(this.position[1] < -50 || this.position[1] > 150 || this.position[0] < -150 || this.position[0] > 150) {
-         return [1, 0];
+         return [1, this.position];
       }
       return [-1, 0];
    }
