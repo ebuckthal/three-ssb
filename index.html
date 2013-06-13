@@ -1,0 +1,129 @@
+<!DOCTYPE HTML>
+<head>
+   <title>ebuckthal.com</title>
+
+   <link href='css/ssb.css' rel='stylesheet' type='text/css'>
+   <link href='http://fonts.googleapis.com/css?family=Geo' rel='stylesheet' type='text/css'>
+   <script type="text/javascript" src="js/glMatrix-0.9.5.min.js"></script>
+   <script type="text/javascript" src="js/webgl-utils.js"></script>
+   <script type="text/javascript" src="js/buffers.js"></script>
+   <script type="text/javascript" src="js/ssb.js"></script>
+   <script type="text/javascript" src="js/shaders.js"></script>
+   <script id="shader-fs" type="x-shader/x-fragment">
+      precision mediump float;
+
+      uniform vec3 uAmbientColor;
+      uniform vec3 uDiffuseColor;
+
+      uniform vec3 uLightPosition;
+      uniform mat3 uNMatrix;
+      uniform mat4 uMVMatrix;
+
+      varying vec3 vNormal;
+      varying vec3 vPosition;
+      varying vec3 vLight;
+
+      void main(void) {
+
+         vec3 normal = normalize(uNMatrix * vNormal);
+         vec3 pos = vec3(uMVMatrix * vec4(vPosition, 1.0));
+         vec3 light = normalize(uLightPosition - vPosition);
+         float diffuse = clamp(dot(vNormal, light), 0.0, 1.0) * 2.0;
+
+         gl_FragColor = vec4(uAmbientColor + uDiffuseColor*diffuse, 1.0);
+      }
+   </script>
+
+   <script id="shader-vs" type="x-shader/x-vertex">
+      attribute vec3 aVertexPosition;
+      attribute vec3 aVertexNormal;
+
+      uniform mat4 uMVMatrix;
+      uniform mat4 uPMatrix;
+      uniform mat3 uNMatrix;
+
+      varying vec3 vNormal;
+      varying vec3 vPosition;
+      //varying vec3 vLight;
+
+      void main(void) {
+
+         //vPosition = uMVMatrix * vec4(aVertexPosition, 1.0);
+         vPosition = aVertexPosition;
+         vNormal = aVertexNormal;
+         //vNormal = normalize(uNMatrix * aVertexNormal);
+         gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+
+      }
+   </script>
+   <script type="text/javascript">
+      var gl;
+
+      function initGL( canvas ) {
+         try {
+            gl = canvas.getContext("experimental-webgl");
+            gl.viewportWidth = canvas.width;
+            gl.viewportHeight = canvas.height;
+         } catch (e) {
+            if (!gl) {
+               alert("not initialized...");
+            }
+         }
+      }
+
+function webGLStart() {
+   if(gl) {
+      return;
+   }
+
+   initGL(document.getElementById("ssb"));
+   initShaders();
+   initBuffers();
+   initPlayers();
+   initPlatforms();
+   initScore();
+   gl.viewport(0,0, gl.viewportWidth, gl.viewportHeight);
+   gl.enable(gl.DEPTH_TEST);
+   gl.clearColor(0.0, 0.0, 0.0, 0.0);
+   gl.enable(gl.CULL_FACE);
+
+   document.onkeydown = handleKeyDown;
+   document.onkeyup = handleKeyUp;
+
+   tick();
+}
+
+function setBG(i) {
+   switch(i) {
+   case 1:
+      document.getElementById("ssb").style.backgroundImage = "url('images/shapes.gif')";
+      break;
+   case 2:
+      document.getElementById("ssb").style.backgroundImage = "url('images/sphere.gif')";
+      break;
+   case 3:
+      document.getElementById("ssb").style.backgroundImage = "url('images/cube.gif')";
+      break;
+   }
+}
+
+</script>
+
+</head>
+
+<body>
+   <div id='content'>
+      <h1 class='threed'>GIF CUBES</h1>
+
+      <span class='anchor' onclick='webGLStart()'>
+         <canvas id="text" width="800" height="800"></canvas>
+         <canvas id="ssb" width="800" height="800"></canvas>
+      </span>
+
+      <div id='menu'>
+         <div id='shapes' onclick='setBG(1)'>SHAPES</div>
+         <div id='sphere' onclick='setBG(2)'>SPHERE</div>
+         <div id='cube' onclick='setBG(3)'>CUBE</div>
+      </div>
+   </div>
+</body>
