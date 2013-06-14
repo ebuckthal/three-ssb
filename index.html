@@ -76,6 +76,9 @@ function webGLStart() {
       return;
    }
 
+   document.getElementById("start").style.zIndex = 0;
+   document.getElementById("start").style.visibility = "hidden";
+
    initGL(document.getElementById("ssb"));
    initShaders();
    initBuffers();
@@ -114,8 +117,10 @@ function setBG(i) {
 <body>
    <div id='content'>
       <h1 class='threed'>GIF CUBES</h1>
+      <h2 class='sub'>Eric Buckthal</h2>
 
       <span class='anchor' onclick='webGLStart()'>
+         <div id="start">Click to start!</div>
          <canvas id="text" width="800" height="800"></canvas>
          <canvas id="ssb" width="800" height="800"></canvas>
       </span>
@@ -125,5 +130,28 @@ function setBG(i) {
          <div id='sphere' onclick='setBG(2)'>SPHERE</div>
          <div id='cube' onclick='setBG(3)'>CUBE</div>
       </div>
+
+      <h2>Controls</h2>
+      <p>Player 1: WASD to move and F to attack</p>
+      <p>Player 2: IJKL to move and ; to attack</p>
+      <p>Use the menu to control the animated GIF background</p>
+
+      <h2>Introduction</h2>
+      <p>GIF CUBES is an experiment in WebGL, physical interactions, and game development. It is a 3D game, but movement is only allows in the two dimensions of your display; think Super Smash Brothers! There are two players. The goal is to increase your score by hitting your opponent so that he cannot return to the map. Every time one of the players travels so far away they cannot return, they are returned to their original starting position their opponent scores. In addition, for every time a player is hit by their opponent but does not die, each successive hit will send them flying further. The camera is programmed to automatically follow the two players.</p>
+      <p>Players are able to defy a bit of regular gravity because they can jump once in mid air and change their direction in the air. A player can also specify a downward movement to increase their fall speed.  A player can jump up through a platform without restriction, and if a player lands on a platform, his jumps are reset back to the maximum of two. Downward movement while on a platform makes the player fall through it, so players are more easily able to move up and down between platforms. Try it!</p>
+
+      <h2>WebGL</h2>
+      <p>Going into this project I thought WebGL would be leaps and bounds different than OpenGL, but of course I was wrong. From what I've gathered, WebGL and OpenGL consist of 90% of the same calls, just exposed through javascript instead. The biggest difference was the lack of a LookAt function to build a ViewMatrix, so I had to combine the Model and the View. WebGL and javascript don't have the best matrix and vector support. The matrices were are hidden behind the gl object, and vectors consisted of arrays of length 3.</p>
+      <p>Luckily shaders in WebGL use GLSL just like OpenGL. The are simply put in a script element in HTML and there are WebGL calls to compiler and use shader programs just like in OpenGL.</p>
+      <p>WebGL also has awful performance (at least for my old laptop video card). My game would run smoothly most of the time, but I was only rendering 5 cubes without textures or anything complicated effects and my CPU would lock to 100% utilization. I'm sure there are some workarounds for these performance issues and WebGL certainly isn't able to compete with OpenGL, but it is really cool that it's possible!</p>
+
+      <h2>Canvas</h2>
+      <p>Canvas is an HTML5 element which allows drawing pixels and making an image. There was a neat tutorial highlighting the benefits of using multiple canvases if you're able to layer your game. The more canvases used, the less CPU time it takes to swap all the buffers around, but the more memory your web application will require.</p>
+      <p>I also learned from the project demonstrations that producing text on top of OpenGL was difficult, but with WebGL and canvas, there is an easy javascript function (fillText()) to create on-screen text. I accomplished this using two canvases, one for the game, and one for the foreground with some text drawn on it. Since I was able to keep a transparent background for GIF CUBES, I put animated GIFs behind it.</p>
+
+      <h2>References</h2>
+      <p><a href="http://www.ibm.com/developerworks/library/wa-canvashtml5layering/">Canvas Layering</a></p>
+      <p><a href="http://learningwebgl.com/blog/?p=1067">WebGL Tutorial</a></p>
+   
    </div>
 </body>
